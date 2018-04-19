@@ -50,4 +50,4 @@ clang = getPathToClang()
 print("note: using clang:", clang)
 entries = getYAMLEntries(clang,  "../../../test/Templight/templight-nested-memoization.cpp")
 
-print entries
+print(entries)

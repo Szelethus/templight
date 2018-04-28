@@ -2,6 +2,7 @@ import json
 import yaml
 import os.path
 from subprocess import Popen, PIPE
+import ps_mem
 
 def getDecodedOutput(programWithArgs):
     process = Popen(programWithArgs, stdout=PIPE)
@@ -46,8 +47,58 @@ def getYAMLEntries(pathToClang, fileName):
             ret.append(yaml.load(entry))
     return ret
 
+def printTable(table):
+    colLength = []
+    rowCount = len(table)
+    colCount = len(table[0])
+    for i in range(0, colCount):
+        col = []
+        for j in range(0, rowCount):
+            col.append(table[j][i])
+        colLength.append(len(max(col, key=len)))
+    
+    for row in table:
+        line = ""
+        for i in range(0, len(row)):
+            line = line + ' ' +  row[i].ljust(colLength[i], ' ')
+        print(line)
+
+def benchmark(clangWithArgs):
+    p = Popen(clangWithArgs, stdout=PIPE)
+
+    privates = []
+    shareds = []
+    while p.poll() == None:
+        private, shared, _, _, = ps_mem.getMemStats(p.pid)
+        privates.append(private)
+        shareds.append(shared)
+
+    maxPrivate = int(max(privates))
+    maxShared = int(max(shareds))
+    avaragePrivate = int(sum(privates) / len(privates))
+    avarageShared = int(sum(shareds) / len(shareds))
+
+    print("benchmark results for run", ' '.join(clangWithArgs))
+    
+    table = [
+        ["",                  "priv",                              "sh"              ],
+        ["maxMem",            str(maxPrivate),                     str(maxShared)    ],
+        ["avarage:",          str(avaragePrivate),                 str(avarageShared)],
+        ["",                  "",                                  ""                ],
+        ["",                  "combined",                          ""                ],
+        ["combinedMaxMem:",   str(maxPrivate + maxShared),         ""                ],
+        ["combinedAvarage:",  str(avaragePrivate + avarageShared), ""                ]
+    ]
+    
+    printTable(table)
+    print("\n======================================\n")
+
+
 clang = getPathToClang()
 print("note: using clang:", clang)
-entries = getYAMLEntries(clang,  "../../../test/Templight/templight-nested-memoization.cpp")
+testFile = "benchmarkTestFile.cpp"
 
-print(entries)
+benchmark([clang, '-c',  testFile])
+benchmark([clang, '-cc1', '-templight-dump', testFile])
+benchmark([clang, '-cc1', '-templight-dump', '-templight-profile', testFile])
+

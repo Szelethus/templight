@@ -17,7 +17,7 @@
 
 namespace llvm {
 class Regex;
-}
+} // namespace llvm
 
 namespace clang {
 

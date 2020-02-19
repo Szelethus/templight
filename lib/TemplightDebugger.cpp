@@ -205,7 +205,7 @@ public:
 
       std::string param_name;
       if (const IdentifierInfo *Id = Params->getParam(I)->getIdentifier()) {
-        param_name = Id->getName();
+        param_name = Id->getName().str();
       } else {
         llvm::raw_string_ostream OS_param(param_name);
         OS_param << '$' << I;
@@ -217,7 +217,7 @@ public:
         PrintableQueryResult cur_result;
 
         if (QueryKind & LookForDecl) {
-          cur_result.Name = Params->getParam(I)->getName();
+          cur_result.Name = Params->getParam(I)->getName().str();
           cur_result.fromLocation(TheSema, Params->getParam(I)->getLocation(),
                                   "<unknown-location>");
         }
